@@ -19,7 +19,6 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -401,6 +400,44 @@ class ReservationControllerTest {
         this.mockMvc.perform(delete("/reservation/" + UUID.randomUUID())
                         .contentType(APPLICATION_JSON_VALUE))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldFailInvalidNumberOfGuests() throws Exception {
+        this.mockMvc.perform(post("/reservation").content(
+                                """
+                                        {
+                                            "customerName": "Test Customer 5",
+                                            "phoneNumber": "+63 999 5555555",
+                                            "email": "customer5@test.com",
+                                            "preferredChannels": ["EMAIL"],
+                                            "numberOfGuests": 0,
+                                            "reservationTime": "2024-09-25T20:55:00Z"
+                                        }
+                                        """
+                        ).contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().is5xxServerError())
+                .andReturn();
+    }
+
+    @Test
+    void shouldFailInvalidReservationTime() throws Exception {
+        this.mockMvc.perform(post("/reservation").content(
+                                """
+                                        {
+                                            "customerName": "Test Customer 5",
+                                            "phoneNumber": "+63 999 5555555",
+                                            "email": "customer5@test.com",
+                                            "preferredChannels": ["EMAIL"],
+                                            "numberOfGuests": 2,
+                                            "reservationTime": ""
+                                        }
+                                        """
+                        ).contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().is5xxServerError())
+                .andReturn();
     }
 
 }

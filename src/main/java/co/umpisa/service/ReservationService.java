@@ -29,6 +29,7 @@ public class ReservationService {
 
     public Reservation addReservation(ReservationRequest reservationRequest) {
         LOG.info("addReservation: {}", reservationRequest);
+        validateInput(reservationRequest);
         Reservation reservation = Reservation.fromRequest(reservationRequest);
 
         reservationRepository.addReservation(reservation);
@@ -55,11 +56,21 @@ public class ReservationService {
         if (Objects.isNull(getReservation(reservationId))) {
             throw new ReservationException("Reservation ID not found");
         }
+        validateInput(reservationRequest);
         Reservation reservation = Reservation.fromRequest(reservationId, reservationRequest);
         reservationRepository.updateReservation(reservation);
         notifySuccessfulUpdate(reservation);
 
         return getReservation(reservation.getReservationId());
+    }
+
+    private static void validateInput(ReservationRequest reservationRequest) {
+        if (Objects.isNull(reservationRequest.getReservationTime())) {
+            throw new ReservationException("Reservation time is required.");
+        }
+        if (reservationRequest.getNumberOfGuests() <= 0) {
+            throw new ReservationException("Number of guests must be over zero.");
+        }
     }
 
     private void notifySuccessfulReservation(Reservation reservation) {
